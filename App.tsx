@@ -1,3 +1,5 @@
+
+You said:
 import React, { useState } from "react";
 import {
   SafeAreaView,
@@ -80,28 +82,12 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.authInner}>
           <Text style={styles.menuTitle}>Welcome to Menu Maestro</Text>
 
-          <View style={styles.roleSwitch}>
-            <TouchableOpacity
-              style={[styles.roleButton, role === "user" && styles.roleActive]}
-              onPress={() => setRole("user")}
-            >
-              <Text style={[styles.roleText, role === "user" && styles.roleTextActive]}>User</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.roleButton, role === "chef" && styles.roleActive]}
-              onPress={() => setRole("chef")}
-            >
-              <Text style={[styles.roleText, role === "chef" && styles.roleTextActive]}>Chef</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.button} onPress={() => { setRole("user"); setScreen("menu"); }}>
+            <Text style={styles.buttonText}>Login as User</Text>
+          </TouchableOpacity>
 
-          <TextInput style={styles.input} placeholder="Username / Name" />
-          <TextInput style={styles.input} placeholder="Cell / Phone Number" keyboardType="phone-pad" />
-          <TextInput style={styles.input} placeholder="Email Address" keyboardType="email-address" />
-          <TextInput style={styles.input} placeholder="Password" secureTextEntry />
-
-          <TouchableOpacity style={styles.button} onPress={() => setScreen("menu")}>
-            <Text style={styles.buttonText}>Enter</Text>
+          <TouchableOpacity style={[styles.button, { marginTop: 10 }]} onPress={() => { setRole("chef"); setScreen("menu"); }}>
+            <Text style={styles.buttonText}>Login as Chef</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -204,8 +190,8 @@ export default function App() {
                 <Ionicons name="trash-outline" size={22} color="#000" />
               </View>
             ) : (
-              <TouchableOpacity onPress={() => addToCart(item)}>
-                <Ionicons name="add-circle-outline" size={28} color="#000" />
+              <TouchableOpacity onPress={() => addToCart(item)} style={{ padding: 10 }}>
+                <Ionicons name="add-circle-outline" size={28} color="#4CAF50" />
               </TouchableOpacity>
             )}
           </View>
@@ -224,11 +210,7 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   authContainer: { flex: 1, backgroundColor: "#f5f5f5" },
   authInner: { padding: 20 },
-  roleSwitch: { flexDirection: "row", justifyContent: "center", marginBottom: 25 },
-  roleButton: { backgroundColor: "#ccc", paddingVertical: 10, paddingHorizontal: 30, marginHorizontal: 5, borderRadius: 8 },
-  roleActive: { backgroundColor: "#000" },
-  roleText: { color: "#000" },
-  roleTextActive: { color: "#fff", fontWeight: "bold" },
+
   input: { backgroundColor: "#fff", padding: 12, borderRadius: 8, marginBottom: 15 },
   menuContainer: { flex: 1, backgroundColor: "#fff", padding: 20 },
   menuTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 5 },
@@ -250,4 +232,4 @@ const styles = StyleSheet.create({
   iconContainer: { flexDirection: "row", gap: 8 },
   cartItem: { flexDirection: "row", alignItems: "center", marginBottom: 15, backgroundColor: "#f0f0f0", padding: 10, borderRadius: 8 },
   totalText: { fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 10 },
-});
+})
