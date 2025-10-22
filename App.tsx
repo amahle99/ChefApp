@@ -1,10 +1,10 @@
-
-You said:
-import React, { useState } from "react";
+   import React, { useState } from "react";
 import {
   SafeAreaView,
-  View,
+  View
+
   Text,
+
   TextInput,
   TouchableOpacity,
   ImageBackground,
@@ -12,6 +12,8 @@ import {
   FlatList,
   StyleSheet,
   ScrollView,
+  Modal,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -20,8 +22,7 @@ export default function App() {
   const [role, setRole] = useState<"chef" | "user" | null>(null);
   const [category, setCategory] = useState<"All" | "Brunch" | "Lunch" | "Dinner">("All");
   const [cart, setCart] = useState<any[]>([]);
-
-  const menuItems = [
+  const [menuItems, setMenuItems] = useState([
     { id: "1", name: "Chicken Pasta", price: 104, desc: "grilled chicken, parsley, creamy sauce", image: require("./assets/pasta.jpg"), category: "Lunch" },
     { id: "2", name: "Pepperoni Pizza", price: 95, desc: "cheese, tomato, pepperoni, olives", image: require("./assets/pizza.jpg"), category: "Lunch" },
     { id: "3", name: "Sticky Wings & Fries", price: 88, desc: "bbq sauce, chicken, potato fries, jalapeño", image: require("./assets/wings.jpg"), category: "Dinner" },
@@ -34,7 +35,10 @@ export default function App() {
     { id: "10", name: "Fruit Platter", price: 250, desc: "grapes, sausage, banana, apple", image: require("./assets/fruit.jpg"), category: "Brunch" },
     { id: "11", name: "Garlic Bread & Sauces", price: 250, desc: "garlic bread, jalapeño sauce, bbq sauce", image: require("./assets/garlic.jpg"), category: "Brunch" },
     { id: "12", name: "Vegetable Wrap", price: 140, desc: "vegetables, hummus, whole wheat wrap", image: require("./assets/Wrap.jpg"), category: "Lunch" },
-  ];
+  ]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
 
   // CART FUNCTIONS
   const addToCart = (item: any) => {
@@ -56,6 +60,38 @@ export default function App() {
   };
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // MENU EDIT FUNCTIONS
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    setIsEditing(true);
+  };
+
+  const handleDelete = (itemId: string) => {
+    Alert.alert(
+      "Delete Item",
+      "Are you sure you want to delete this item?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", onPress: () => setMenuItems(menuItems.filter(item => item.id !== itemId)) },
+      ]
+    );
+  };
+
+  const handleAdd = () => {
+    setEditingItem({ id: Date.now().toString(), name: "", price: 0, desc: "", category: "Lunch", image: require("./assets/pasta.jpg") });
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    if (editingItem.id && menuItems.find(item => item.id === editingItem.id)) {
+      setMenuItems(menuItems.map(item => item.id === editingItem.id ? editingItem : item));
+    } else {
+      setMenuItems([...menuItems, editingItem]);
+    }
+    setIsEditing(false);
+    setEditingItem(null);
+  };
 
   // SPLASH SCREEN
   if (screen === "splash") {
@@ -138,19 +174,29 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.menuContainer}>
-      {/* Header with title and cart */}
+      {/* Header with title, add button, cart, and logout */}
       <View style={styles.headerRow}>
         <Text style={styles.menuTitle}>MENU</Text>
-        {role === "user" && (
-          <TouchableOpacity style={styles.cartButton} onPress={() => setScreen("cart")}>
-            <Ionicons name="cart-outline" size={30} color="#000" />
-            {cart.length > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cart.length}</Text>
-              </View>
-            )}
+        <View style={styles.headerActions}>
+          {role === "chef" && (
+            <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+              <Ionicons name="add-circle-outline" size={30} color="#4CAF50" />
+            </TouchableOpacity>
+          )}
+          {role === "user" && (
+            <TouchableOpacity style={styles.cartButton} onPress={() => setScreen("cart")}>
+              <Ionicons name="cart-outline" size={30} color="#000" />
+              {cart.length > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cart.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.logoutButton} onPress={() => { setScreen("auth"); setRole(null); }}>
+            <Ionicons name="log-out-outline" size={30} color="#FF0000" />
           </TouchableOpacity>
-        )}
+        </View>
       </View>
 
       {/* Category Buttons */}
@@ -186,8 +232,12 @@ export default function App() {
 
             {role === "chef" ? (
               <View style={styles.iconContainer}>
-                <Ionicons name="create-outline" size={22} color="#000" />
-                <Ionicons name="trash-outline" size={22} color="#000" />
+                <TouchableOpacity onPress={() => handleEdit(item)}>
+                  <Ionicons name="create-outline" size={22} color="#000" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                  <Ionicons name="trash-outline" size={22} color="#000" />
+                </TouchableOpacity>
               </View>
             ) : (
               <TouchableOpacity onPress={() => addToCart(item)} style={{ padding: 10 }}>
@@ -197,6 +247,48 @@ export default function App() {
           </View>
         )}
       />
+
+      {/* Edit Modal */}
+      <Modal visible={isEditing} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{editingItem?.id && menuItems.find(item => item.id === editingItem.id) ? "Edit Item" : "Add Item"}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={editingItem?.name || ""}
+              onChangeText={(text) => setEditingItem({ ...editingItem, name: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Price"
+              value={editingItem?.price?.toString() || ""}
+              onChangeText={(text) => setEditingItem({ ...editingItem, price: parseFloat(text) || 0 })}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Description"
+              value={editingItem?.desc || ""}
+              onChangeText={(text) => setEditingItem({ ...editingItem, desc: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Category"
+              value={editingItem?.category || ""}
+              onChangeText={(text) => setEditingItem({ ...editingItem, category: text })}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={[styles.button, { backgroundColor: "#ccc" }]} onPress={() => { setIsEditing(false); setEditingItem(null); }}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={handleSave}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -232,4 +324,11 @@ const styles = StyleSheet.create({
   iconContainer: { flexDirection: "row", gap: 8 },
   cartItem: { flexDirection: "row", alignItems: "center", marginBottom: 15, backgroundColor: "#f0f0f0", padding: 10, borderRadius: 8 },
   totalText: { fontSize: 20, fontWeight: "bold", textAlign: "center", marginVertical: 10 },
+  headerActions: { flexDirection: "row", alignItems: "center" },
+  addButton: { marginRight: 10 },
+  logoutButton: { marginLeft: 10 },
+  modalOverlay: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
+  modalContent: { backgroundColor: "#fff", padding: 20, borderRadius: 10, width: "80%" },
+  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
+  modalButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
 })
